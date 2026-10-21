@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Solar System Calculator</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1a1d21;--mu:#5d6670;--ac:#e08a00;--bd:#dde1e6;--ok:#1b8a4b;--wr:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171a;--card:#1e2327;--tx:#eceff2;--mu:#9aa5b0;--bd:#2e353b;--ok:#4cc98a;--wr:#ff7b6b}}
+:root[data-theme="dark"]{--bg:#14171a;--card:#1e2327;--tx:#eceff2;--mu:#9aa5b0;--bd:#2e353b;--ok:#4cc98a;--wr:#ff7b6b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:12px}
+.w{max-width:760px;margin:auto}
+h1{font-size:20px;margin:4px 0 10px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+h2{font-size:16px;margin:0 0 4px;color:var(--ac)}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+label{display:block;font-size:12px;color:var(--mu)}
+input,select{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:15px}
+button{padding:9px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font-size:14px;cursor:pointer}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+button:disabled{opacity:.4;cursor:default}
+.bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.bar button.a{background:var(--ac);color:#fff;border-color:var(--ac)}
+.nav{display:flex;justify-content:space-between;gap:8px}
+.big{font-size:18px;font-weight:700}
+.wr{color:var(--wr);font-weight:600}.ok{color:var(--ok);font-weight:600}
+.t{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+tr.s{background:rgba(224,138,0,.18)}tr.r{cursor:pointer}
+.m{color:var(--mu);font-size:13px}
+.st{display:none}.st.on{display:block}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>Solar System Calculator</h1>
+<div class="bar"><button id="un" onclick="undo()">Undo</button><button id="re" onclick="redo()">Redo</button><span id="tabs" style="display:contents"></span></div>
+
+<div class="c st" id="s0"><h2>Qadam 1: Load aur panel</h2><div class="m">Apna load aur backup ke ghante likhein, phir panel chunein.</div>
+<div class="g">
+<div><label>Load (W)</label><input id="load" type="number" value="4000"></div>
+<div><label>Backup (ghante)</label><input id="hours" type="number" value="5"></div>
+<div><label>Panel (W)</label><select id="panel"><option>585</option><option selected>620</option><option>645</option><option>715</option><option>720</option><option>770</option><option value="c">Custom</option></select></div>
+<div id="cp" style="display:none"><label>Custom panel (W)</label><input id="cpanel" type="number" value="600"></div>
+<div><label>Solar loss (%)</label><input id="sloss" type="number" value="20"></div>
+</div></div>
+
+<div class="c st" id="s1"><h2>Qadam 2: Solar chunein</h2><div class="m">Solar ka 20% loss minus karne ke baad jo bachta hai wo load ke qareeb hona chahiye. Thora upar neeche theek hai, zyada nahi.</div>
+<div id="vs"></div><div class="t"><table id="sol"></table></div></div>
+
+<div class="c st" id="s2"><h2>Qadam 3: Battery</h2><div class="m">Voltage load se khud lagta hai. Row par click karke battery chunein.</div>
+<div class="g">
+<div><label>Battery type</label><select id="type"><option value="lithium">Lithium</option><option value="tubular">Tubular</option></select></div>
+<div><label>Battery loss (%)</label><input id="bloss" type="number" value="10"></div>
+<div><label>System voltage</label><select id="volt"><option value="auto">Auto (load se)</option><option>12</option><option>24</option><option>48</option></select></div>
+<div><label>Custom Ah (optional)</label><input id="cah" type="number" placeholder="jaise 250"></div>
+</div>
+<div id="vinfo" style="margin-top:10px"></div><div class="t"><table id="bt"></table></div></div>
+
+<div class="c st" id="s3"><h2>Qadam 4: Charging</h2><div class="m">Charging ka load aap baad mein bhi badal sakte hain, baqi sab wahi rahega.</div>
+<div class="g">
+<div><label>Charging ke liye load (W)</label><input id="cload" type="number" value="2000"></div>
+<div><label>Inverter max charging (A)</label><input id="imax" type="number" value="120"></div>
+</div><div id="chg" style="margin-top:10px"></div></div>
+
+<div class="c st" id="s4"><h2>Qadam 5: MPPT aur strings</h2><div class="m">Ek string maximum 450V. Baqi MPPT khali reh sakte hain.</div>
+<div class="g">
+<div><label>MPPT ki tadad</label><input id="mp" type="number" value="2"></div>
+<div><label>Max string voltage (V)</label><input id="vmax" type="number" value="450"></div>
+<div><label>Panel Voc (V)</label><input id="voc" type="number" value="50"></div>
+</div><div id="str" style="margin-top:10px"></div></div>
+
+<div class="c st" id="s5"><h2>Natija</h2><div id="sum"></div></div>
+
+<div class="nav"><button id="bk" onclick="go(step-1)">Peechay</button><button id="nx" class="p" onclick="go(step+1)">Aagay</button></div>
+<div class="m" style="margin-top:10px">Formula: Battery chahiye = Load x Ghante / (1 - loss). Backup = Battery Wh x (1 - loss) / Load. Charging = Battery Wh / (Charging load x (1 - loss)).</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const AH={lithium:[100,150,200,280,300],tubular:[100,120,150,200]};
+const F=['load','hours','panel','cpanel','sloss','type','bloss','volt','cah','cload','imax','mp','vmax','voc'];
+const NM=['Load','Solar','Battery','Charging','MPPT','Natija'];
+let sel=null,solN=null,step=0,hist=[],pos=-1,R={};
+function snap(){const s={sel,solN};F.forEach(f=>s[f]=$(f).value);return JSON.stringify(s)}
+function save(){const s=snap();if(hist[pos]===s)return;hist=hist.slice(0,pos+1);hist.push(s);pos++;btn()}
+function restore(i){const s=JSON.parse(hist[i]);F.forEach(f=>$(f).value=s[f]);sel=s.sel;solN=s.solN;calc();btn()}
+function undo(){if(pos>0){pos--;restore(pos)}}
+function redo(){if(pos<hist.length-1){pos++;restore(pos)}}
+function btn(){$('un').disabled=pos<=0;$('re').disabled=pos>=hist.length-1}
+function go(i){step=Math.max(0,Math.min(5,i));for(let k=0;k<6;k++)$('s'+k).classList.toggle('on',k===step);$('bk').disabled=step===0;$('nx').disabled=step===5;
+$('tabs').innerHTML=NM.map((n,k)=>'<button class="'+(k===step?'a':'')+'" onclick="go('+k+')">'+(k+1)+'. '+n+'</button>').join('')}
+function calc(){
+const L=+$('load').value||0,H=+$('hours').value||0,sl=(+$('sloss').value||0)/100,bl=(+$('bloss').value||0)/100;
+const pw=$('panel').value==='c'?+$('cpanel').value:+$('panel').value;
+$('cp').style.display=$('panel').value==='c'?'':'none';
+// solar: effective power (after loss) nearest to load
+const x=L/(1-sl)/pw,fl=Math.max(1,Math.floor(x)),tol=L<=2000?200:Math.min(2000,L*0.25);
+let c=[fl-1,fl,fl+1,fl+2].filter(n=>n>=1);
+const eff=n=>n*pw*(1-sl),df=n=>eff(n)-L;
+const best=c.reduce((a,b)=>Math.abs(df(b))<Math.abs(df(a))?b:a);
+if(!solN||!c.includes(solN))solN=best;
+$('vs').innerHTML='Load <b>'+L+' W</b>. Solar chahiye: <b>'+Math.round(L/(1-sl))+' W</b>. Allowed farq: <b>+/- '+Math.round(tol)+' W</b>';
+$('sol').innerHTML='<tr><th>Panels</th><th>Solar</th><th>Loss ke baad</th><th>Farq</th><th></th></tr>'+c.map(n=>{const d=df(n),o=Math.abs(d)<=tol;return'<tr class="r'+(n===solN?' s':'')+'" onclick="solN='+n+';calc();save()"><td>'+n+' x '+pw+'W</td><td>'+n*pw+' W</td><td>'+Math.round(eff(n))+' W</td><td>'+(d>0?'+':'')+Math.round(d)+' W</td><td class="'+(o?'ok':'wr')+'">'+(o?'theek':'bahar')+(n===best?' (best)':'')+'</td></tr>'}).join('');
+// battery
+const V=$('volt').value==='auto'?(L<=2000?12:L<=5000?24:48):+$('volt').value;
+const t=$('type').value,needWh=L*H/(1-bl);
+$('vinfo').innerHTML='Voltage: <b>'+V+'V</b> | Energy chahiye: <b>'+Math.round(needWh)+' Wh</b> | Discharge current: <b>'+(L/V).toFixed(0)+' A</b>';
+let list=AH[t].slice();const ca=+$('cah').value;if(ca>0&&!list.includes(ca))list.push(ca);
+const rows=list.map(ah=>{const w=V*ah,k=Math.ceil(needWh/w);return{ah,k,wh:k*w,phys:t==='tubular'?k*(V/12):k,bk:k*w*(1-bl)/L}});
+const bb=rows.reduce((a,b)=>b.wh<a.wh||(b.wh===a.wh&&b.ah>a.ah)?b:a);
+if(!sel||!rows.find(r=>r.ah===sel))sel=bb.ah;
+$('bt').innerHTML='<tr><th>Ah</th><th>Parallel</th><th>Total batteries</th><th>Total Wh</th><th>Backup</th></tr>'+rows.map(r=>'<tr class="r'+(r.ah===sel?' s':'')+'" onclick="sel='+r.ah+';calc();save()"><td>'+r.ah+(r===bb?' (best)':'')+'</td><td>'+r.k+(t==='tubular'?' line x '+(V/12)+' series':'')+'</td><td>'+r.phys+' x '+(t==='tubular'?'12':V)+'V</td><td>'+Math.round(r.wh)+'</td><td>'+r.bk.toFixed(1)+' h</td></tr>').join('');
+// charging
+const S=rows.find(r=>r.ah===sel),cl=+$('cload').value||0,ch=cl?S.wh/(cl*(1-bl)):0,cA=cl/V,im=+$('imax').value;
+$('chg').innerHTML='Battery: <b>'+S.phys+' x '+S.ah+'Ah ('+Math.round(S.wh)+' Wh)</b><br>Charging time: <span class="big">'+(cl?ch.toFixed(1):'-')+' ghante</span><br>Charging current: '+cA.toFixed(0)+' A '+(cA>im?'<span class="wr">(inverter limit '+im+'A se zyada!)</span>':'<span class="ok">(theek)</span>');
+// strings
+const mp=+$('mp').value||1,vm=+$('vmax').value,voc=+$('voc').value,per=Math.max(1,Math.floor(vm/voc)),ns=Math.ceil(solN/per),base=Math.floor(solN/ns),rem=solN%ns;
+let h='Panels: <b>'+solN+'</b>. Ek string mein max <b>'+per+'</b> panels. Strings: <b>'+ns+'</b><br>',sx='';
+for(let i=0;i<ns;i++){const p=base+(i<rem?1:0);sx+='MPPT '+(i+1)+': '+p+' panels = '+(p*voc).toFixed(0)+'V<br>'}
+h+=sx+(ns>mp?'<span class="wr">Strings ('+ns+') MPPT ('+mp+') se zyada hain, parallel karni paregi.</span>':'<span class="m">Baqi '+(mp-ns)+' MPPT khali.</span>');
+$('str').innerHTML=h;
+$('sum').innerHTML='<b>Load:</b> '+L+' W, '+H+' ghante backup<br><b>Solar:</b> '+solN+' x '+pw+'W = '+solN*pw+' W ('+Math.round(eff(solN))+' W loss ke baad)<br><b>Battery:</b> '+V+'V, '+S.phys+' x '+S.ah+'Ah '+t+', backup '+S.bk.toFixed(1)+' h<br><b>Charging:</b> '+cl+' W par '+(cl?ch.toFixed(1):'-')+' ghante<br><b>Strings:</b><br>'+sx}
+document.querySelectorAll('input,select').forEach(e=>{e.addEventListener('input',calc);e.addEventListener('change',()=>{calc();save()})});
+$('type').addEventListener('change',()=>{$('bloss').value=$('type').value==='lithium'?10:30;sel=null;calc();save()});
+calc();save();go(0);
+</script>
+</body>
+</html>
